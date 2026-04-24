@@ -41,11 +41,13 @@ st.markdown("""
         overflow: hidden !important;
     }
     
+    /* UPDATED: DEVELOPERS LAB TEXT COLOR TO PURE WHITE */
     .sidebar-heading {
         font-size: 24px !important;
         font-weight: bold;
         margin-top: 10px;
         margin-bottom: 5px;
+        color: #FFFFFF !important;
     }
     
     [data-testid="stSidebar"] [data-testid="stImage"] {
@@ -60,8 +62,10 @@ st.markdown("""
         margin-top: 5px;
         margin-bottom: 0px;
     }
+    
+    /* UPDATED: SIDEBAR VALUES TO PURE WHITE */
     .side-value { 
-        color: white !important; 
+        color: #FFFFFF !important; 
         font-weight: bold; 
         font-size: 15px; 
         margin-top: 0px;
@@ -126,12 +130,11 @@ st.markdown("""
         margin-bottom: 15px;
     }
 
-    /* UPDATED: INCREASED SIZE & REMOVED NEON HIGHLIGHT */
     .header-style { 
         font-weight: bold; 
         font-style: italic; 
         color: white !important; 
-        font-size: 60px !important;
+        font-size: 90px !important;
         text-shadow: none !important;
     }
 
@@ -163,9 +166,8 @@ def get_response(user_input):
     score = sims[0][idx]
     
     if score < 0.2: 
-        return "The entered query does not match the current knowledge base. Please enter a question within the supported system scope.", 0.0
+        return "The submitted query does not match the current knowledge base. Please enter a question within the supported system scope.", 0.0
     
-    # REQUIRED CHANGE: Mapping specific confidence levels to indices 0-5
     conf_map = {0: 0.97, 1: 0.95, 2: 0.91, 3: 0.99, 4: 0.93, 5: 0.98}
     confidence = conf_map.get(idx, random.uniform(0.90, 0.99))
     
