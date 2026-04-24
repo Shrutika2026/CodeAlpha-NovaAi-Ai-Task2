@@ -22,11 +22,13 @@ st.set_page_config(page_title="Nova AI Interface", layout="wide")
 
 st.markdown("""
     <style>
+    /* Main App Background */
     .stApp {
         background: linear-gradient(135deg, #7b2ff7, #f107a3);
         color: white;
     }
     
+    /* Sidebar Styling */
     [data-testid="stSidebar"] {
         background-color: #0E1117 !important;
         border-right: 2px solid #00FFA3;
@@ -37,45 +39,23 @@ st.markdown("""
         gap: 0rem !important;
     }
 
-    section[data-testid="stSidebar"] > div {
-        overflow: hidden !important;
-    }
-
-    /* --- ARROW COLOR FIX --- */
-    /* 1. Target the button icon directly */
-    [data-testid="stSidebarCollapseIcon"] {
-        color: white !important;
+    /* Universal fix for all icons and SVGs in the sidebar (ARROW COLOR FIX) */
+    [data-testid="stSidebar"] svg, 
+    [data-testid="stSidebarCollapseIcon"],
+    button[kind="header"] svg,
+    .st-emotion-cache-1981p6n svg {
         fill: white !important;
-    }
-    
-    /* 2. Target the SVG inside the button */
-    [data-testid="stSidebar"] button svg {
-        fill: white !important;
+        stroke: white !important;
         color: white !important;
     }
 
-    /* 3. Target the button when the sidebar is closed */
-    .st-emotion-cache-1981p6n e1179k32 {
-        color: white !important;
-    }
-
-    /* Target all buttons in the sidebar header area */
-    header[data-testid="stHeader"] button svg {
-        fill: white !important;
-    }
-    /* ---------------------- */
-    
+    /* Sidebar Heading & Labels */
     .sidebar-heading {
         font-size: 24px !important;
         font-weight: bold;
         margin-top: 10px;
         margin-bottom: 5px;
         color: #FFFFFF !important;
-    }
-    
-    [data-testid="stSidebar"] [data-testid="stImage"] {
-        display: flex;
-        justify-content: center;
     }
     
     .side-label { 
@@ -94,11 +74,6 @@ st.markdown("""
         margin-bottom: 0px;
     }
 
-    .info-spacer {
-        height: 56px;
-        display: block;
-    }
-    
     .tagline {
         color: #00FFA3 !important;
         font-size: 16px;
@@ -108,6 +83,7 @@ st.markdown("""
         text-align: center;
     }
 
+    /* Status Boxes */
     .status-box {
         border: 2px solid #00FFA3;
         color: #00FFA3;
@@ -120,11 +96,7 @@ st.markdown("""
         display: block;
     }
 
-    .box-spacer {
-        height: 40px; 
-        display: block;
-    }
-
+    /* Buttons & Progress Bar */
     div.stButton > button {
         background-color: white !important;
         color: black !important; 
@@ -138,6 +110,7 @@ st.markdown("""
         background-color: #39FF14 !important;
     }
 
+    /* Chat Blocks */
     .q-block {
         background-color: rgba(50, 50, 50, 0.7);
         padding: 15px;
@@ -152,6 +125,7 @@ st.markdown("""
         margin-bottom: 15px;
     }
 
+    /* Header Styling (90px) */
     .header-style { 
         font-weight: bold; 
         font-style: italic; 
@@ -160,31 +134,38 @@ st.markdown("""
         text-shadow: none !important;
     }
 
+    /* Spacing Utilities */
+    .info-spacer { height: 56px; display: block; }
+    .box-spacer { height: 40px; display: block; }
     .main-content { margin-bottom: 150px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- REST OF THE CODE (NO CHANGES) ---
+# --- 3. SESSION STATE ---
 if "history" not in st.session_state:
     st.session_state.history = []
 
+# --- 4. ENGINE LOGIC ---
 def load_data():
     try:
         with open('faqs.json', 'r') as f:
             return pd.DataFrame(json.load(f))
-    except:
+    except Exception as e:
+        st.error(f"Error loading JSON: {e}")
         return pd.DataFrame({"question": [], "answer": []})
 
 df = load_data()
 
 def get_response(user_input):
+    if df.empty:
+        return "Database is empty.", 0.0
+        
     def clean(text):
         return " ".join([lemmatizer.lemmatize(t.lower()) for t in nltk.word_tokenize(text)])
     
-    if df.empty: return "Database Error", 0.0
-    
     proc_qs = df['question'].apply(clean)
     proc_user = clean(user_input)
+    
     vectorizer = TfidfVectorizer()
     matrix = vectorizer.fit_transform(list(proc_qs) + [proc_user])
     sims = cosine_similarity(matrix[-1], matrix[:-1])
@@ -194,36 +175,45 @@ def get_response(user_input):
     if score < 0.2: 
         return "The submitted query does not match the current knowledge base. Please enter a question within the supported system scope.", 0.0
     
+    # Confidence Mapping
     conf_map = {0: 0.97, 1: 0.95, 2: 0.91, 3: 0.99, 4: 0.93, 5: 0.98}
     confidence = conf_map.get(idx, random.uniform(0.90, 0.99))
     
     return df.iloc[idx]['answer'], confidence
 
+# --- 5. SIDEBAR ---
 with st.sidebar:
     st.markdown('<p class="sidebar-heading">🧪 DEVELOPERS LAB</p>', unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/2593/2593635.png", width=100)
     st.markdown('<span class="tagline">Intelligent Conversations, Instant Solutions</span>', unsafe_allow_html=True)
     st.markdown("---")
+    
     st.markdown('<p class="side-label">DEVELOPER</p><p class="side-value">Shrutika</p>', unsafe_allow_html=True)
     st.markdown('<div class="info-spacer"></div>', unsafe_allow_html=True)
+    
     st.markdown('<p class="side-label">INSTITUTION</p><p class="side-value">MODEL COLLEGE</p>', unsafe_allow_html=True)
     st.markdown('<div class="info-spacer"></div>', unsafe_allow_html=True)
+    
     st.markdown('<p class="side-label">YEAR</p><p class="side-value">SY BSc IT</p>', unsafe_allow_html=True)
+    
     st.markdown("---")
+    
     st.markdown('<div class="status-box">SYSTEM: ONLINE</div>', unsafe_allow_html=True)
     st.markdown('<div class="box-spacer"></div>', unsafe_allow_html=True)
     st.markdown('<div class="status-box">ENGINE: TF-IDF V2</div>', unsafe_allow_html=True)
 
+# --- 6. MAIN CONTENT ---
 st.markdown('<h1 class="header-style">🤖 <i><b><u>Nova AI</u></b></i></h1>', unsafe_allow_html=True)
 st.markdown("### ⚡ QUICK COMMANDS")
 
-questions = df['question'].tolist()
-cols = st.columns(3)
-clicked_q = None
+if not df.empty:
+    questions = df['question'].tolist()
+    cols = st.columns(3)
+    clicked_q = None
 
-for i, q in enumerate(questions):
-    if cols[i % 3].button(q):
-        clicked_q = q
+    for i, q in enumerate(questions):
+        if cols[i % 3].button(q):
+            clicked_q = q
 
 st.markdown("<div class='main-content'>", unsafe_allow_html=True)
 for item in st.session_state.history:
@@ -234,6 +224,7 @@ for item in st.session_state.history:
         st.progress(item['c'])
 st.markdown("</div>", unsafe_allow_html=True)
 
+# --- 7. INPUT HANDLING ---
 user_query = st.chat_input("Type your question here")
 final_query = clicked_q if clicked_q else user_query
 
