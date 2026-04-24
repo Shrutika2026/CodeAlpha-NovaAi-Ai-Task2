@@ -40,8 +40,19 @@ st.markdown("""
     section[data-testid="stSidebar"] > div {
         overflow: hidden !important;
     }
+
+    /* NEW: TARGETING THE SIDEBAR ARROW ICON TO MAKE IT WHITE */
+    [data-testid="stSidebarCollapseIcon"] {
+        color: #FFFFFF !important;
+        fill: #FFFFFF !important;
+    }
     
-    /* UPDATED: DEVELOPERS LAB TEXT COLOR TO PURE WHITE */
+    /* ALSO TARGETING THE ICON BUTTON BEFORE COLLAPSE */
+    button[data-testid="sidebar-button"] svg {
+        fill: white !important;
+        color: white !important;
+    }
+    
     .sidebar-heading {
         font-size: 24px !important;
         font-weight: bold;
@@ -63,7 +74,6 @@ st.markdown("""
         margin-bottom: 0px;
     }
     
-    /* UPDATED: SIDEBAR VALUES TO PURE WHITE */
     .side-value { 
         color: #FFFFFF !important; 
         font-weight: bold; 
