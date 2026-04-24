@@ -22,11 +22,13 @@ st.set_page_config(page_title="Nova AI Interface", layout="wide")
 
 st.markdown("""
     <style>
+    /* Main Background */
     .stApp {
         background: linear-gradient(135deg, #7b2ff7, #f107a3);
         color: white;
     }
     
+    /* Sidebar Styling */
     [data-testid="stSidebar"] {
         background-color: #0E1117 !important;
         border-right: 2px solid #00FFA3;
@@ -37,11 +39,18 @@ st.markdown("""
         gap: 0rem !important;
     }
 
-    section[data-testid="stSidebar"] > div {
-        overflow: hidden !important;
+    /* --- UNIVERSAL ARROW & ICON FIX (PURE WHITE) --- */
+    /* Isse sidebar ka arrow aur baaki icons white ho jayenge */
+    [data-testid="stSidebarCollapseIcon"] svg,
+    [data-testid="collapsedControl"] svg,
+    header button svg,
+    section[data-testid="stSidebar"] button svg {
+        fill: white !important;
+        stroke: white !important;
+        color: white !important;
     }
-    
-    /* UPDATED: DEVELOPERS LAB TEXT COLOR TO PURE WHITE */
+
+    /* DEVELOPERS LAB Text */
     .sidebar-heading {
         font-size: 24px !important;
         font-weight: bold;
@@ -63,7 +72,6 @@ st.markdown("""
         margin-bottom: 0px;
     }
     
-    /* UPDATED: SIDEBAR VALUES TO PURE WHITE */
     .side-value { 
         color: #FFFFFF !important; 
         font-weight: bold; 
@@ -148,14 +156,19 @@ if "history" not in st.session_state:
 
 # --- 4. ENGINE LOGIC ---
 def load_data():
-    with open('faqs.json', 'r') as f:
-        return pd.DataFrame(json.load(f))
+    try:
+        with open('faqs.json', 'r') as f:
+            return pd.DataFrame(json.load(f))
+    except:
+        return pd.DataFrame({"question": [], "answer": []})
 
 df = load_data()
 
 def get_response(user_input):
     def clean(text):
         return " ".join([lemmatizer.lemmatize(t.lower()) for t in nltk.word_tokenize(text)])
+    
+    if df.empty: return "Data not found.", 0.0
     
     proc_qs = df['question'].apply(clean)
     proc_user = clean(user_input)
@@ -198,13 +211,14 @@ with st.sidebar:
 st.markdown('<h1 class="header-style">🤖 <i><b><u>Nova AI</u></b></i></h1>', unsafe_allow_html=True)
 st.markdown("### ⚡ QUICK COMMANDS")
 
-questions = df['question'].tolist()
-cols = st.columns(3)
-clicked_q = None
+if not df.empty:
+    questions = df['question'].tolist()
+    cols = st.columns(3)
+    clicked_q = None
 
-for i, q in enumerate(questions):
-    if cols[i % 3].button(q):
-        clicked_q = q
+    for i, q in enumerate(questions):
+        if cols[i % 3].button(q):
+            clicked_q = q
 
 st.markdown("<div class='main-content'>", unsafe_allow_html=True)
 for item in st.session_state.history:
