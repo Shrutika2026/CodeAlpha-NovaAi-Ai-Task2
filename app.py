@@ -41,17 +41,29 @@ st.markdown("""
         overflow: hidden !important;
     }
 
-    /* NEW: TARGETING THE SIDEBAR ARROW ICON TO MAKE IT WHITE */
+    /* --- ARROW COLOR FIX --- */
+    /* 1. Target the button icon directly */
     [data-testid="stSidebarCollapseIcon"] {
-        color: #FFFFFF !important;
-        fill: #FFFFFF !important;
+        color: white !important;
+        fill: white !important;
     }
     
-    /* ALSO TARGETING THE ICON BUTTON BEFORE COLLAPSE */
-    button[data-testid="sidebar-button"] svg {
+    /* 2. Target the SVG inside the button */
+    [data-testid="stSidebar"] button svg {
         fill: white !important;
         color: white !important;
     }
+
+    /* 3. Target the button when the sidebar is closed */
+    .st-emotion-cache-1981p6n e1179k32 {
+        color: white !important;
+    }
+
+    /* Target all buttons in the sidebar header area */
+    header[data-testid="stHeader"] button svg {
+        fill: white !important;
+    }
+    /* ---------------------- */
     
     .sidebar-heading {
         font-size: 24px !important;
@@ -152,20 +164,24 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SESSION STATE ---
+# --- REST OF THE CODE (NO CHANGES) ---
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# --- 4. ENGINE LOGIC ---
 def load_data():
-    with open('faqs.json', 'r') as f:
-        return pd.DataFrame(json.load(f))
+    try:
+        with open('faqs.json', 'r') as f:
+            return pd.DataFrame(json.load(f))
+    except:
+        return pd.DataFrame({"question": [], "answer": []})
 
 df = load_data()
 
 def get_response(user_input):
     def clean(text):
         return " ".join([lemmatizer.lemmatize(t.lower()) for t in nltk.word_tokenize(text)])
+    
+    if df.empty: return "Database Error", 0.0
     
     proc_qs = df['question'].apply(clean)
     proc_user = clean(user_input)
@@ -183,28 +199,21 @@ def get_response(user_input):
     
     return df.iloc[idx]['answer'], confidence
 
-# --- 5. SIDEBAR ---
 with st.sidebar:
     st.markdown('<p class="sidebar-heading">🧪 DEVELOPERS LAB</p>', unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/2593/2593635.png", width=100)
     st.markdown('<span class="tagline">Intelligent Conversations, Instant Solutions</span>', unsafe_allow_html=True)
     st.markdown("---")
-    
     st.markdown('<p class="side-label">DEVELOPER</p><p class="side-value">Shrutika</p>', unsafe_allow_html=True)
     st.markdown('<div class="info-spacer"></div>', unsafe_allow_html=True)
-    
     st.markdown('<p class="side-label">INSTITUTION</p><p class="side-value">MODEL COLLEGE</p>', unsafe_allow_html=True)
     st.markdown('<div class="info-spacer"></div>', unsafe_allow_html=True)
-    
     st.markdown('<p class="side-label">YEAR</p><p class="side-value">SY BSc IT</p>', unsafe_allow_html=True)
-    
     st.markdown("---")
-    
     st.markdown('<div class="status-box">SYSTEM: ONLINE</div>', unsafe_allow_html=True)
     st.markdown('<div class="box-spacer"></div>', unsafe_allow_html=True)
     st.markdown('<div class="status-box">ENGINE: TF-IDF V2</div>', unsafe_allow_html=True)
 
-# --- 6. MAIN CONTENT ---
 st.markdown('<h1 class="header-style">🤖 <i><b><u>Nova AI</u></b></i></h1>', unsafe_allow_html=True)
 st.markdown("### ⚡ QUICK COMMANDS")
 
@@ -225,7 +234,6 @@ for item in st.session_state.history:
         st.progress(item['c'])
 st.markdown("</div>", unsafe_allow_html=True)
 
-# --- 7. INPUT HANDLING ---
 user_query = st.chat_input("Type your question here")
 final_query = clicked_q if clicked_q else user_query
 
